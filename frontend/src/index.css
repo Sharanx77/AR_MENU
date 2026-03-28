@@ -1,0 +1,9 @@
+/* src/index.css */
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Add a global transition for background and text colors */
+body {
+  @apply transition-colors duration-500;
+}

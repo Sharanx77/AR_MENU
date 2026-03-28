@@ -1,0 +1,29 @@
+<body style="background: #111; color: white; font-family: sans-serif; padding: 50px;">
+    <h2>Gemini API Isolation Test</h2>
+    <input type="text" id="key" placeholder="Paste API Key Here" style="width: 300px; padding: 10px;">
+    <button onclick="test()" style="padding: 10px 20px; cursor: pointer;">Run Test</button>
+    <pre id="log" style="background: #000; padding: 20px; margin-top: 20px; border: 1px solid #333;"></pre>
+
+    <script>
+        async function test() {
+            const key = document.getElementById('key').value;
+            const log = document.getElementById('log');
+            log.innerText = "⏳ Calling Google...";
+            
+            // This is the STABLE production URL (Not Beta)
+            const url = `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${key}`;
+            
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: "Say: API IS WORKING" }] }] })
+                });
+                const data = await res.json();
+                log.innerText = JSON.stringify(data, null, 2);
+            } catch (err) {
+                log.innerText = "Fatal Error: " + err.message;
+            }
+        }
+    </script>
+</body>

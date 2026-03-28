@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <style>body { margin: 0; overflow: hidden; touch-action: none; }</style>
+</head>
+<body>
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; trackingMethod: best;">
+        <a-marker preset="hiro">
+            <a-entity id="food-model" scale="0 0 0" rotation="0 0 0" position="0 0 0"></a-entity>
+        </a-marker>
+        <a-entity camera></a-entity>
+    </a-scene>
+
+    <script>
+        let isDragging = false;
+        let previousPosition = { x: 0, y: 0 };
+        let initialPinchDistance = 0;
+        let initialScale = 1;
+        const model = document.querySelector('#food-model');
+
+        // --- 1. LISTEN FOR NEW MODELS & RESET DEFAULTS ---
+        window.addEventListener('message', (event) => {
+            const { action, url } = event.data;
+            if (action === 'LOAD_MODEL') {
+                // Load the new 3D model (.glb or .gltf)
+                model.setAttribute('gltf-model', url);
+                
+                // Reset the visual scale and rotation back to default
+                model.setAttribute('scale', '1 1 1');
+                model.setAttribute('rotation', '0 0 0');
+                
+                // Reset the math variables so your next pinch-to-zoom starts fresh
+                initialScale = 1;
+                isDragging = false;
+            }
+        });
+
+        // --- 2. TOUCH CONTROLS (MOBILE SWIPE & PINCH) ---
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                isDragging = true;
+                previousPosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            } else if (e.touches.length === 2) {
+                isDragging = false;
+                initialPinchDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+                initialScale = model.getAttribute('scale').x;
+            }
+        }, { passive: false });
+
+        document.addEventListener('touchmove', (e) => {
+            if (!model) return;
+            if (e.touches.length === 1 && isDragging) {
+                const deltaX = e.touches[0].clientX - previousPosition.x;
+                const deltaY = e.touches[0].clientY - previousPosition.y;
+                const currentRot = model.getAttribute('rotation');
+                model.setAttribute('rotation', { x: currentRot.x - deltaY * 0.8, y: currentRot.y + deltaX * 0.8, z: currentRot.z });
+                previousPosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            } else if (e.touches.length === 2) {
+                const distance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+                let newScale = initialScale * (distance / initialPinchDistance);
+                // Limits set between 0.1 and 10 for .glb models
+                newScale = Math.max(0.1, Math.min(newScale, 10)); 
+                model.setAttribute('scale', `${newScale} ${newScale} ${newScale}`);
+            }
+        }, { passive: false });
+        
+        document.addEventListener('touchend', () => isDragging = false);
+
+        // --- 3. MOUSE CONTROLS (DESKTOP CLICK & SCROLL) ---
+        document.addEventListener('mousedown', (e) => { isDragging = true; previousPosition = { x: e.clientX, y: e.clientY }; });
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging || !model) return;
+            const currentRot = model.getAttribute('rotation');
+            model.setAttribute('rotation', { x: currentRot.x - (e.clientY - previousPosition.y) * 0.8, y: currentRot.y + (e.clientX - previousPosition.x) * 0.8, z: currentRot.z });
+            previousPosition = { x: e.clientX, y: e.clientY };
+        });
+        document.addEventListener('mouseup', () => isDragging = false);
+        
+        document.addEventListener('wheel', (e) => {
+            if (!model) return;
+            // Smooth scroll speed (-0.002) and limits between 0.1 and 10
+            let scale = Math.max(0.1, Math.min(model.getAttribute('scale').x + (e.deltaY * -0.002), 10)); 
+            model.setAttribute('scale', `${scale} ${scale} ${scale}`);
+        });
+    </script>
+</body>
+</html>
