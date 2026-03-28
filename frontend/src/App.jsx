@@ -2,15 +2,16 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, Mic, X, Plus, Minus, Info, ChevronLeft, Sun, Moon, Zap, CheckCircle2, Search, ArrowRight } from 'lucide-react';
 
+// 👇 CHANGE THIS TO YOUR ACTUAL RENDER BACKEND URL 👇
+const API_BASE_URL = 'https://ar-menu-d8vz.onrender.com'; 
+
 export default function App() {
-  // --- NEW: App starts on 'landing' instead of 'menu' ---
   const [view, setView] = useState('landing');
   const [menuItems, setMenuItems] = useState([]); 
   const [cart, setCart] = useState([]);
   const [activeItem, setActiveItem] = useState(null);
   const [theme, setTheme] = useState('dark');
   
-  // --- NEW: Search State ---
   const [activeFilter, setActiveFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   
@@ -25,7 +26,8 @@ export default function App() {
   const recognitionRef = useRef(null);
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/menu')
+    // 🔗 Updated to use live backend
+    fetch(`${API_BASE_URL}/api/menu`)
       .then(res => res.json())
       .then(data => setMenuItems(data))
       .catch(err => console.error("Failed to load menu", err));
@@ -64,7 +66,8 @@ export default function App() {
     if (transcript !== 'Tap to customize...' && transcript !== '') {
       setTranscript('🤖 AI is parsing your request...');
       try {
-        const response = await fetch('http://localhost:5000/api/customize', {
+        // 🔗 Updated to use live backend
+        const response = await fetch(`${API_BASE_URL}/api/customize`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ transcript })
@@ -92,7 +95,8 @@ export default function App() {
   const handleCheckout = async () => {
     playSound('success');
     try {
-      await fetch('http://localhost:5000/api/orders', {
+      // 🔗 Updated to use live backend
+      await fetch(`${API_BASE_URL}/api/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ cart, total: cartTotal })
@@ -115,7 +119,8 @@ export default function App() {
       iframeRef.current?.contentWindow.postMessage({ action: 'TOGGLE_XRAY', isVisible: true }, '*');
       
       try {
-        const response = await fetch(`http://localhost:5000/api/analyze/${activeItem.id}`, { method: 'POST' });
+        // 🔗 Updated to use live backend
+        const response = await fetch(`${API_BASE_URL}/api/analyze/${activeItem.id}`, { method: 'POST' });
         const data = await response.json();
         setAiData(data); 
       } catch (err) {
@@ -135,7 +140,6 @@ export default function App() {
     setTimeout(() => { iframeRef.current?.contentWindow.postMessage({ action: 'LOAD_MODEL', url: item.modelUrl }, '*'); }, 800);
   };
 
-  // --- NEW: Dual Filtering Logic (Diet + Search Bar) ---
   const filteredMenu = menuItems.filter(item => {
     const matchesDiet = activeFilter === "All" || item.diet === activeFilter;
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -146,7 +150,6 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#050505] text-gray-900 dark:text-white font-['Outfit'] transition-colors duration-500 overflow-x-hidden">
       
-      {/* NAVBAR: Hidden on Landing Page */}
       {view !== 'landing' && (
         <nav className="fixed top-0 w-full p-8 flex justify-between items-center z-[100] backdrop-blur-xl bg-white/70 dark:bg-black/10 border-b border-gray-200 dark:border-white/5">
           <motion.h1 onClick={() => { playSound('tap'); setView('landing'); }} className="text-2xl font-black tracking-widest font-['Playfair_Display'] italic cursor-pointer">THE OG CAFE!<span className="text-cyan-500">.</span></motion.h1>
@@ -170,7 +173,6 @@ export default function App() {
 
       <AnimatePresence mode="wait">
         
-        {/* --- NEW: LANDING PAGE VIEW --- */}
         {view === 'landing' && (
           <motion.main 
             key="landing"
@@ -180,7 +182,6 @@ export default function App() {
             transition={{ duration: 0.8 }}
             className="h-screen flex flex-col items-center justify-center relative overflow-hidden px-8"
           >
-            {/* Animated Background Elements */}
             <motion.div 
               animate={{ rotate: 360, scale: [1, 1.1, 1] }} 
               transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
@@ -227,7 +228,6 @@ export default function App() {
           </motion.main>
         )}
 
-        {/* --- MENU VIEW WITH SEARCH BAR --- */}
         {view === 'menu' && (
           <motion.main key="menu" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }} className="pt-32 px-8 pb-20 max-w-5xl mx-auto z-10 relative">
             <header className="mb-10">
@@ -239,17 +239,14 @@ export default function App() {
                <div className="py-20 text-center text-gray-500 animate-pulse font-medium tracking-widest">CONNECTING TO KITCHEN SERVERS...</div>
             ) : (
               <>
-                {/* NEW: SEARCH BAR & FILTERS ROW */}
                 <div className="flex flex-col md:flex-row gap-6 mb-12 items-start md:items-center justify-between">
                   
-                  {/* Category Filters */}
                   <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide w-full md:w-auto">
                     {["All", "Vegan", "Vegetarian", "Meat"].map(f => (
                       <button key={f} onClick={() => { playSound('tap'); setActiveFilter(f); }} className={`px-6 py-2.5 rounded-full font-bold text-sm transition-all whitespace-nowrap ${activeFilter === f ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/30' : 'bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-600 dark:text-white/60 hover:bg-gray-50 dark:hover:bg-white/10'}`}>{f}</button>
                     ))}
                   </div>
 
-                  {/* Dynamic Search Bar */}
                   <div className="relative w-full md:w-72">
                     <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input 
@@ -265,7 +262,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Grid renders the filteredMenu, not the raw menuItems */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                   {filteredMenu.length === 0 ? (
                     <div className="col-span-full py-20 text-center text-gray-400 italic">No artisan items match your search.</div>
@@ -295,7 +291,6 @@ export default function App() {
           </motion.main>
         )}
 
-        {/* ... (Cart and AR Views remain identical to the previous version) ... */}
         {view === 'cart' && (
           <motion.div key="cart" initial={{ x: 30, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -30, opacity: 0 }} className="pt-32 px-8 max-w-2xl mx-auto pb-48 relative z-10">
             <h2 className="text-5xl font-['Playfair_Display'] font-black mb-12 italic tracking-tight">The <span className="opacity-20 not-italic">Order.</span></h2>
