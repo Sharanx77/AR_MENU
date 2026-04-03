@@ -6,7 +6,9 @@
 [![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
 [![Gemini API](https://img.shields.io/badge/Google%20Gemini-8E75B2?style=for-the-badge&logo=google&logoColor=white)](https://deepmind.google/technologies/gemini/)
 
-LUMIÈRE is a full-stack, mobile-first WebAR application that redefines the digital menu. By merging **Augmented Reality (AR.js/A-Frame)** with **Generative AI (Google Gemini 2.5 Flash)**, it allows users to project 3D artisan food models into their physical space, scan them for real-time nutritional insights, and customize their orders using natural voice commands. 
+[LIVE LINK](https://armenu-lilac.vercel.app/)
+
+THE OG CAFE! is a full-stack, mobile-first WebAR application that redefines the digital menu. By merging **Augmented Reality (AR.js/A-Frame)** with **Generative AI (Google Gemini 2.5 Flash)**, it allows users to project 3D artisan food models into their physical space, scan them for real-time nutritional insights, and customize their orders using natural voice commands. 
 
 Built to eliminate friction in hospitality and elevate the visual dining experience.
 
